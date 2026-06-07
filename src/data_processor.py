@@ -2,9 +2,6 @@ import os
 import urllib.request
 import pandas as pd
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend for server environments
-import matplotlib.pyplot as plt
 import re
 import nltk
 from nltk.corpus import stopwords
@@ -150,6 +147,10 @@ def preprocess_text(text):
     return " ".join(cleaned_tokens)
 
 def run_eda_and_generate_plots():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
     train_path = os.path.join(RAW_DATA_DIR, 'training_data.csv')
     if not os.path.exists(train_path):
         print("Training dataset not found, download first.")

@@ -1,8 +1,25 @@
 import sqlite3
 import os
+import shutil
 from werkzeug.security import generate_password_hash, check_password_hash
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'processed', 'medi_assist.db')
+# Determine if running in Vercel or serverless environment
+IS_VERCEL = os.environ.get('VERCEL') == '1' or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
+
+ORIGINAL_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'processed', 'medi_assist.db')
+
+if IS_VERCEL:
+    DB_PATH = '/tmp/medi_assist.db'
+    # Copy pre-populated DB to writeable /tmp directory on startup
+    if os.path.exists(ORIGINAL_DB_PATH) and not os.path.exists(DB_PATH):
+        try:
+            os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+            shutil.copy2(ORIGINAL_DB_PATH, DB_PATH)
+            print("Successfully copied pre-populated SQLite database to /tmp.")
+        except Exception as e:
+            print(f"Warning: Failed to copy database to /tmp: {e}")
+else:
+    DB_PATH = ORIGINAL_DB_PATH
 
 def get_db_connection():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

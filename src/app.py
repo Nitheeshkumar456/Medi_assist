@@ -2,6 +2,11 @@ import os
 import sys
 import logging
 import re
+
+# Resolve local path for Vercel Serverless Functions
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import joblib
 import numpy as np
