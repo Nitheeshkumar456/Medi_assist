@@ -1,0 +1,27 @@
+# Exclude git repository metadata
+.git/
+
+# Exclude python virtual environments and cache
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+
+# Exclude Docker configs
+Dockerfile
+docker-compose.yml
+
+# Exclude evaluation reports, plots, and walkthroughs
+artifacts/
+walkthrough.md
+implementation_plan.md
+task.md
+
+# Exclude raw dataset CSVs
+data/raw/
+
+# Exclude Hugging Face training checkpoint directories (keep only deployment models if needed)
+models/bert_results/
