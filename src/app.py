@@ -4,10 +4,16 @@ import logging
 import re
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 import joblib
-import torch
 import numpy as np
 import pandas as pd
-from transformers import BertTokenizer, BertForSequenceClassification
+
+# Optional imports for PyTorch and Transformers to support lightweight serverless environments
+try:
+    import torch
+    from transformers import BertTokenizer, BertForSequenceClassification
+    HAS_TRANSFORMERS = True
+except ImportError:
+    HAS_TRANSFORMERS = False
 
 # Local imports
 from src.database import (
@@ -40,7 +46,10 @@ label_encoder = None
 traditional_models = {}
 transformer_model = None
 transformer_tokenizer = None
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if HAS_TRANSFORMERS:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+else:
+    device = None
 
 def load_inference_models():
     global label_encoder, traditional_models, transformer_model, transformer_tokenizer
@@ -62,7 +71,7 @@ def load_inference_models():
             logger.error(f"Error loading traditional models: {e}")
             
     # 3. Load Transformer Model & Tokenizer
-    if os.path.exists(TRANSFORMER_PATH):
+    if HAS_TRANSFORMERS and os.path.exists(TRANSFORMER_PATH):
         try:
             transformer_tokenizer = BertTokenizer.from_pretrained(TRANSFORMER_PATH)
             transformer_model = BertForSequenceClassification.from_pretrained(TRANSFORMER_PATH)
