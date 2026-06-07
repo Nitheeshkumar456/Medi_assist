@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAssist - AI Healthcare Assistant</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for medical icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-body">
+    <!-- Background glowing glass blobs -->
+    <div class="glass-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Main Navigation Header -->
+    <nav class="navbar navbar-expand-lg navbar-glass mb-4 px-4 py-3">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <span class="brand-icon me-2">⚕️</span>
+                <span class="brand-name">MediAssist</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Language selector -->
+                    <div class="d-flex align-items-center gap-2 text-white">
+                        <i class="fa-solid fa-earth-americas"></i>
+                        <select class="form-select form-select-sm select-lang-custom" id="languageSelector">
+                            <option value="en" selected>English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Profile indicator -->
+                    <div class="user-badge px-3 py-2 rounded-pill d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#profileModal">
+                        <i class="fa-solid fa-user-doctor text-cyan"></i>
+                        <span class="text-white fw-medium">{{ user }}</span>
+                    </div>
+                    
+                    <!-- Sign out -->
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger-custom rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container Grid -->
+    <div class="container-fluid px-4 pb-5">
+        
+        <!-- Medical Disclaimer Banner -->
+        <div class="alert alert-warning-custom mb-4 py-3" role="alert">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation fs-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading mb-1 fw-bold">Clinical Disclaimer</h5>
+                    <p class="mb-0 fs-7 opacity-85">MediAssist is an AI symptom assessment assistant. It is intended for educational purposes and is NOT a substitute for professional medical diagnostics, treatments, or clinical decisions. If you are experiencing serious health complications, please call your local emergency services (911) immediately.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Left Column: Intelligent Chat Window -->
+            <div class="col-xl-6 col-lg-7">
+                <div class="card card-glass chat-card h-100 d-flex flex-column">
+                    <div class="card-header border-0 d-flex align-items-center justify-content-between p-3 bg-glass-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="online-indicator"></div>
+                            <h5 class="mb-0 text-white fw-bold">MediAssist Assistant</h5>
+                        </div>
+                        <button class="btn btn-sm btn-clear-history text-muted" id="clearHistoryBtn">
+                            <i class="fa-solid fa-trash-can me-1"></i> Clear Chat
+                        </button>
+                    </div>
+                    
+                    <!-- Chat Messages Window -->
+                    <div class="card-body chat-messages-container flex-grow-1 p-4" id="chatContainer">
+                        <!-- Default welcome bot message -->
+                        <div class="message-wrapper message-bot">
+                            <div class="message-icon">⚕️</div>
+                            <div class="message-bubble">
+                                <p class="mb-0">Hello, I'm your AI health advisor. Describe what you're experiencing (e.g. <i>"I have a throbbing headache, high fever, and nausea"</i>) and we can start evaluating.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Typing Indicator -->
+                    <div class="chat-typing-indicator px-4 py-2 d-none" id="typingIndicator">
+                        <div class="typing-bubble">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input Panel -->
+                    <div class="card-footer border-0 p-3 bg-glass-footer">
+                        <form id="chatForm" class="d-flex gap-2">
+                            <!-- Voice Input Button -->
+                            <button type="button" class="btn btn-mic-custom" id="micBtn" title="Speak to chatbot">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                            
+                            <input type="text" class="form-control form-control-custom flex-grow-1" id="chatInput" placeholder="Describe symptoms in your own words..." autocomplete="off">
+                            
+                            <button type="submit" class="btn btn-primary-custom px-4">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Medical Dashboard & Metrics -->
+            <div class="col-xl-6 col-lg-5">
+                <div class="card card-glass h-100">
+                    <div class="card-header border-0 bg-glass-header p-3">
+                        <!-- Navigation Tabs -->
+                        <ul class="nav nav-pills nav-pills-custom justify-content-center" id="dashboardTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="results-tab" data-bs-toggle="tab" data-bs-target="#resultsPanel" type="button" role="tab"><i class="fa-solid fa-square-poll-vertical me-1"></i> Diagnostic Center</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="selector-tab" data-bs-toggle="tab" data-bs-target="#selectorPanel" type="button" role="tab"><i class="fa-solid fa-list-check me-1"></i> Symptom Checklist</button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card-body p-4 tab-content flex-grow-1 overflow-auto">
+                        
+                        <!-- TAB 1: Diagnostic Center Results -->
+                        <div class="tab-pane fade show active" id="resultsPanel" role="tabpanel">
+                            <div class="text-center py-5 text-muted" id="noResultsMsg">
+                                <i class="fa-solid fa-circle-info fs-1 mb-3 text-cyan"></i>
+                                <h5>No Diagnostic Data Yet</h5>
+                                <p class="mb-0">Describe symptoms in the chat or select symptoms in the checklist tab to run our neural classification pipeline.</p>
+                            </div>
+                            
+                            <div class="d-none" id="resultsContent">
+                                <!-- Disease Diagnosis Card -->
+                                <div class="prediction-alert p-4 rounded mb-4 text-center">
+                                    <span class="badge bg-soft-info mb-2 text-cyan">Estimated Health Condition</span>
+                                    <h2 class="text-white fw-bold mb-1" id="diagDisease">Migraine</h2>
+                                    <div class="d-flex justify-content-center align-items-center gap-2 mt-2">
+                                        <div class="progress progress-confidence" style="width: 150px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-cyan" id="diagConfidenceBar" style="width: 85%;"></div>
+                                        </div>
+                                        <span class="text-white fs-7" id="diagConfidenceText">85% confidence</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3">
+                                    <!-- Severity Status Widget -->
+                                    <div class="col-md-6">
+                                        <div class="widget-glass p-3 text-center">
+                                            <i class="fa-solid fa-triangle-exclamation fs-3 mb-2" id="diagSeverityIcon"></i>
+                                            <h6 class="text-muted text-uppercase fs-8 mb-1">Severity Category</h6>
+                                            <h4 class="fw-bold mb-0 text-white" id="diagSeverityText">Medium Severity</h4>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Specialist Referral Widget -->
+                                    <div class="col-md-6">
+                                        <div class="widget-glass p-3 text-center">
+                                            <i class="fa-solid fa-user-doctor fs-3 text-cyan mb-2"></i>
+                                            <h6 class="text-muted text-uppercase fs-8 mb-1">Recommended Specialist</h6>
+                                            <h4 class="fw-bold mb-0 text-cyan" id="diagSpecialist">Neurologist</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detailed Clinical Info -->
+                                <div class="card card-glass-inner mt-4 p-4">
+                                    <h5 class="text-white border-bottom-custom pb-2 mb-3"><i class="fa-solid fa-notes-medical text-cyan me-2"></i>Condition Description</h5>
+                                    <p class="text-light fs-7 opacity-90" id="diagDescription">A migraine headache is a headache that is associated with one or more symptoms, such as nausea, vomiting, or increased sensitivity to light and sound...</p>
+                                </div>
+                                
+                                <div class="card card-glass-inner mt-3 p-4">
+                                    <h5 class="text-white border-bottom-custom pb-2 mb-3"><i class="fa-solid fa-shield-halved text-warning me-2"></i>Precautionary Guidelines</h5>
+                                    <ul class="text-light fs-7 ps-3 opacity-90" id="diagPrecautions">
+                                        <li>Avoid bright lights and noise</li>
+                                        <li>Drink plenty of water</li>
+                                        <li>Apply cold compress to your forehead</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="card card-glass-inner mt-3 p-4">
+                                    <h5 class="text-white border-bottom-custom pb-2 mb-3"><i class="fa-solid fa-list text-cyan me-2"></i>Extracted Symptom Entities</h5>
+                                    <div class="d-flex flex-wrap gap-2" id="diagSymptomBadges">
+                                        <span class="badge bg-glass-symptom">headache</span>
+                                        <span class="badge bg-glass-symptom">nausea</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Model Type Used Info -->
+                                <div class="text-end mt-3 text-muted fs-8">
+                                    <span>Diagnostics served by: </span><b class="text-light" id="diagModelUsed">BERT-Tiny (Transformer)</b>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- TAB 2: Symptom Checklist Form -->
+                        <div class="tab-pane fade" id="selectorPanel" role="tabpanel">
+                            <form id="directDiagnoseForm">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="text-white fw-bold">Manual Symptom Selector</h5>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <label class="text-muted fs-8">Classifier Model:</label>
+                                        <select class="form-select form-select-sm select-model-custom" id="directModelType">
+                                            <option value="traditional" selected>Random Forest (Traditional)</option>
+                                            <option value="transformer">BERT-Tiny (Transformer)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-muted fs-7">Select all matching symptoms you are experiencing from our clinical library:</p>
+                                
+                                <!-- Search filter -->
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text bg-glass-input text-muted border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" class="form-control form-control-custom bg-glass-input" id="searchSymptomInput" placeholder="Filter symptoms...">
+                                </div>
+                                
+                                <!-- Symptoms list wrapper -->
+                                <div class="symptom-checkbox-list p-3 mb-4 rounded border-glass-inner" id="symptomCheckboxContainer">
+                                    <!-- Will be populated dynamically via JavaScript -->
+                                    <div class="text-center py-5 text-muted">Loading clinical symptom list...</div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-outline-light-custom w-100 py-3" id="resetChecklistBtn">Reset</button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="submit" class="btn btn-primary-custom w-100 py-3">Run Diagnostics</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- PROFILE MANAGEMENT MODAL -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-glass p-4">
+                <div class="modal-header border-0 pb-0">
+                    <h4 class="modal-title text-white fw-bold"><i class="fa-solid fa-id-card text-cyan me-2"></i>Medical Profile</h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body pt-3">
+                    <form action="{{ url_for('update_profile') }}" method="POST">
+                        <div class="form-group mb-3 text-start">
+                            <label class="form-label text-muted fs-8 text-uppercase">Username</label>
+                            <input type="text" class="form-control form-control-custom" value="{{ user }}" disabled>
+                        </div>
+                        
+                        <div class="form-group mb-3 text-start">
+                            <label for="profileEmail" class="form-label text-muted fs-8 text-uppercase">Email Address</label>
+                            <input type="email" class="form-control form-control-custom" id="profileEmail" name="email" value="{{ session.get('user_email', '') }}" placeholder="example@email.com">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 form-group mb-3 text-start">
+                                <label for="profileAge" class="form-label text-muted fs-8 text-uppercase">Age (Years)</label>
+                                <input type="number" class="form-control form-control-custom" id="profileAge" name="age" value="{{ session.get('user_age', '') }}" min="1" max="120">
+                            </div>
+                            
+                            <div class="col-md-6 form-group mb-3 text-start">
+                                <label for="profileGender" class="form-label text-muted fs-8 text-uppercase">Gender</label>
+                                <select class="form-control form-control-custom form-select-custom" id="profileGender" name="gender">
+                                    <option value="" disabled>Select Gender</option>
+                                    <option value="Male" {% if session.get('user_gender') == 'Male' %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if session.get('user_gender') == 'Female' %}selected{% endif %}>Female</option>
+                                    <option value="Other" {% if session.get('user_gender') == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-4 text-start">
+                            <label for="profileHistory" class="form-label text-muted fs-8 text-uppercase">Known Medical Complications</label>
+                            <textarea class="form-control form-control-custom" id="profileHistory" name="medical_history" rows="3">{{ session.get('user_history', '') }}</textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary-custom w-100 py-3">Update Medical Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Application Logic JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
